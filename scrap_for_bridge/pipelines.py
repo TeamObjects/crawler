@@ -31,7 +31,7 @@ class ScrapForBridgePipeline:
         #상품 정보 tsv 파일 생성
         with open(f'{self.item_info_file_name}.tsv','a',encoding='utf-8', newline='') as item_info_file:
                 writer2 = csv.writer(item_info_file, delimiter='\t')
-                writer2.writerow(['ctgr1','ctgr2','ctgr3','product_name','main_img','item_img_path','dc_rate','price','tags_obj','detail_imgs'])
+                writer2.writerow(['ctgr1','ctgr2','ctgr3','product_name','img_type','img_seq_no','dc_rate','price','tags_obj','img_path'])
         
     def process_item(self, item, spider):
         # 카테고리 정보 넘어올 때 실행
@@ -50,34 +50,43 @@ class ScrapForBridgePipeline:
             ctgr2 = item['ctgr2']
             ctgr3 = item['ctgr3']
             coupang_prod_id = re.sub(r' \- ','_',item['tags_obj'][-1]['쿠팡상품번호'])
-            
             # download path 설정 (os 경로+ category_path + 상품 title.replace("/","_").replace(".","_") + 상품id)
             img_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}"
             # 상품 이미지 저장 폴더 생성
             self.make_dirs(img_folder_path)
-            
+            xlxs_info = {}
+            # 공통데이터 작업
+            xlxs_info["ctgr1"] = ctgr1
+            xlxs_info["ctgr2"] = ctgr2
+            xlxs_info["ctgr3"] = ctgr3
+            xlxs_info["product_name"] = product_name
+            xlxs_info["img_folder_path"] = img_folder_path
+            xlxs_info["dc_rate"] = item["dc_rate"]
+            xlxs_info["price"] = item["price"]
+            xlxs_info["tags_obj"] = item["tags_obj"]
+            xlxs_info["img_folder_path"] = item["img_folder_path"]
             for i,img_url in enumerate(img_urls):
+                #사진 순서
+                xlxs_info["img_seq_no"] = i+1
                 # main 이미지일 경우 경로 다르게 하기
                 if i == 0 :
                     #상품 상세 이미지 다운로드
-                    for detail_url in item['detail_urls']:
-                        self.img_req(detail_url,self.make_dirs(img_folder_path+'/details'))
+                    for j,detail_url in enumerate(item['detail_urls']):
+                        xlxs_info["img_type"] = 'detail'
+                        xlxs_info["img_seq_no"] = j+1
+                        xlxs_info["img_path"] = img_folder_path+'/details'
+                        self.record_info(self.img_req(detail_url,self.make_dirs(img_folder_path+'/details')),xlxs_info)
                     #main 이미지 다운로드
+                    xlxs_info["img_type"] = 'main'
                     main_img_path = img_folder_path + '/main_img'
+                    xlxs_info["img_path"] = main_img_path
                     img_folder_path = self.make_dirs(main_img_path)
                 else:
-                    img_folder_path = img_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}"
-                result = self.img_req(img_url,img_folder_path)
-                #상품 데이터 정보 tsv 저장
-                if result:
-                    with open(f'{self.item_info_file_name}.tsv','a',encoding='utf-8',newline='') as item_info_file:
-                        writer2 = csv.writer(item_info_file,delimiter='\t')
-                        #'ctgr1','ctgr2','ctgr3','product_name','main_img','item_img_path','dc_rate','price','tags_obj','detail_imgs'
-                        writer2.writerow([ctgr1,ctgr2,ctgr3,product_name,main_img_path,img_folder_path,item['dc_rate'],item['price'],item['tags_obj'],img_folder_path+'/details'])
-                else:
-                    # 실패시 만들어 놓은 디렉토리 삭제
-                    print("========================실패==========================",product_name)
-                    os.rmdir(img_folder_path)
+                    xlxs_info["img_type"] = 'product'
+                    img_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}"
+                xlxs_info["img_folder_path"] = img_folder_path
+                self.record_info(self.img_req(img_url,img_folder_path),xlxs_info)
+
 
             if os.path.isdir(img_folder_path):
                 ctgr_items = '>'.join([ctgr1,ctgr2,ctgr3])
@@ -88,7 +97,29 @@ class ScrapForBridgePipeline:
         # 특수문자 변경
         return re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》·💕⭐]', '_', word)
     
-    
+    def record_info(self,result,xlxs_info):
+        ctgr1 = xlxs_info["ctgr1"]
+        ctgr2 = xlxs_info["ctgr2"]
+        ctgr3 = xlxs_info["ctgr3"]
+        product_name = xlxs_info["product_name"]
+        img_type = xlxs_info["img_type"]
+        img_seq_no = xlxs_info["img_seq_no"]
+        dc_rate = xlxs_info["dc_rate"]
+        price = xlxs_info["price"]
+        tags_obj = xlxs_info["tags_obj"]
+        img_path = xlxs_info["img_path"]
+        img_folder_path = xlxs_info["img_folder_path"]
+        #상품 데이터 정보 tsv 저장
+        if result:
+            with open(f'{self.item_info_file_name}.tsv','a',encoding='utf-8',newline='') as item_info_file:
+                writer2 = csv.writer(item_info_file,delimiter='\t')
+                #'ctgr1','ctgr2','ctgr3','product_name','img_type','img_seq_no','dc_rate','price','tags_obj','img_path'
+                writer2.writerow([ctgr1,ctgr2,ctgr3,product_name,img_type,img_seq_no,dc_rate,price,tags_obj,img_path])
+        else:
+            # 실패시 만들어 놓은 디렉토리 삭제
+            print("========================실패==========================",product_name)
+            os.rmdir(img_folder_path)
+        
     def img_req(self,img_url,img_folder_path,retries=0):
         file_name, _ = os.path.splitext(img_url)
         # file 이름 jpg 확장자로 통일하기위한 작업

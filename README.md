@@ -28,17 +28,16 @@ scrap_for_bridge 경로에서 `scrapy crawl <crawler 이름>`
 
 ### tsv 파일 저장 데이터
 ```
-- 기본적으로 이미지 저장시 한 row 마다 한 줄씩 생성된다. => 중복데이터 많음, 추후 협의를 통해 image 순서나 타이틀 넣어야할 것 같음 
-- 
+- 기본적으로 이미지 저장시 한 row 마다 한 줄씩 생성된다.
 
 'ctgr1' : 1뎁스 (최상위 카테고리)
 'ctgr2' : 2뎁스 (중간 카테고리)
 'ctgr3' : 3뎁스 (최하위 카테고리)
 'product_name' : 상품명 
-'main_img' : 썸네일 이미지 저장 경로
-'item_img_path' : 상품이미지 저장 경로
+'img_type' : main(메인이미지), product(상품이미지), detail(상품상세이미지)
+'img_seq_no' : 이미지 저장순서
 'dc_rate' : 할인율
 'price' : 할인 전 가격
 'tags_obj' : 상품마다의 tag 정보 json 형식
-'detail_imgs' : 상세페이지 이미지 저장된 경로
+'img_path' : 이미지 저장된 경로
 ```
