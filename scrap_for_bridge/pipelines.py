@@ -64,7 +64,7 @@ class ScrapForBridgePipeline:
             xlxs_info["dc_rate"] = item["dc_rate"]
             xlxs_info["price"] = item["price"]
             xlxs_info["tags_obj"] = item["tags_obj"]
-            xlxs_info["img_folder_path"] = item["img_folder_path"]
+            
             for i,img_url in enumerate(img_urls):
                 #사진 순서
                 xlxs_info["img_seq_no"] = i+1
@@ -84,7 +84,7 @@ class ScrapForBridgePipeline:
                 else:
                     xlxs_info["img_type"] = 'product'
                     img_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}"
-                xlxs_info["img_folder_path"] = img_folder_path
+                    xlxs_info["img_path"] = img_folder_path
                 self.record_info(self.img_req(img_url,img_folder_path),xlxs_info)
 
 
