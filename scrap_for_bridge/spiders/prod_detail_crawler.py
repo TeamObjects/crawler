@@ -102,7 +102,7 @@ class ProdDetailCrawlerSpider(scrapy.Spider):
                 for img in images:
                     if img.has_attr('src'):
                         detail_urls.append(img['src'])
-                        
+           
         doc = ProductInfoDetailItem()
         doc['product_name'] = response.meta['product_name']
         doc['item_img_urls'] = response.meta['item_img_urls']
@@ -112,6 +112,6 @@ class ProdDetailCrawlerSpider(scrapy.Spider):
         doc['price'] = response.meta['price']
         doc['ctgr1'] = "여성패션"
         doc['ctgr2'] = "의류"
-        doc['ctgr3'] = response.meta['ctgr3_name']
+        doc['ctgr3'] = re.sub('/','_',response.meta['ctgr3_name'])
         yield doc
                     

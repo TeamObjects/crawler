@@ -66,25 +66,27 @@ class ScrapForBridgePipeline:
             xlxs_info["tags_obj"] = item["tags_obj"]
             
             for i,img_url in enumerate(img_urls):
+                #상품 상세 이미지 다운로드
+                for j,detail_url in enumerate(item['detail_urls']):
+                    xlxs_info["img_type"] = 'detail'
+                    xlxs_info["img_seq_no"] = j+1
+                    detail_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}/details"
+                    xlxs_info["img_file_name"] = detail_folder_path +'/'+ self.extract_filename(img_url)
+                    self.record_info(self.img_req(detail_url,self.make_dirs(detail_folder_path)),xlxs_info)
+                    
                 #사진 순서
                 xlxs_info["img_seq_no"] = i+1
                 # main 이미지일 경우 경로 다르게 하기
                 if i == 0 :
-                    #상품 상세 이미지 다운로드
-                    for j,detail_url in enumerate(item['detail_urls']):
-                        xlxs_info["img_type"] = 'detail'
-                        xlxs_info["img_seq_no"] = j+1
-                        xlxs_info["img_path"] = img_folder_path+'/details'
-                        self.record_info(self.img_req(detail_url,self.make_dirs(img_folder_path+'/details')),xlxs_info)
                     #main 이미지 다운로드
                     xlxs_info["img_type"] = 'main'
                     main_img_path = img_folder_path + '/main_img'
-                    xlxs_info["img_path"] = main_img_path
+                    xlxs_info["img_file_name"] = main_img_path +'/'+ self.extract_filename(img_url)
                     img_folder_path = self.make_dirs(main_img_path)
                 else:
                     xlxs_info["img_type"] = 'product'
                     img_folder_path = f"../data/{ctgr1}/{ctgr2}/{ctgr3}/{product_name}/{coupang_prod_id}"
-                    xlxs_info["img_path"] = img_folder_path
+                    xlxs_info["img_file_name"] = img_folder_path +'/'+ self.extract_filename(img_url)
                 self.record_info(self.img_req(img_url,img_folder_path),xlxs_info)
 
 
@@ -107,23 +109,21 @@ class ScrapForBridgePipeline:
         dc_rate = xlxs_info["dc_rate"]
         price = xlxs_info["price"]
         tags_obj = xlxs_info["tags_obj"]
-        img_path = xlxs_info["img_path"]
+        img_file_name = xlxs_info["img_file_name"]
         img_folder_path = xlxs_info["img_folder_path"]
         #상품 데이터 정보 tsv 저장
         if result:
             with open(f'{self.item_info_file_name}.tsv','a',encoding='utf-8',newline='') as item_info_file:
                 writer2 = csv.writer(item_info_file,delimiter='\t')
-                #'ctgr1','ctgr2','ctgr3','product_name','img_type','img_seq_no','dc_rate','price','tags_obj','img_path'
-                writer2.writerow([ctgr1,ctgr2,ctgr3,product_name,img_type,img_seq_no,dc_rate,price,tags_obj,img_path])
+                #'ctgr1','ctgr2','ctgr3','product_name','img_type','img_seq_no','dc_rate','price','tags_obj','img_file_name'
+                writer2.writerow([ctgr1,ctgr2,ctgr3,product_name,img_type,img_seq_no,dc_rate,price,tags_obj,img_file_name])
         else:
             # 실패시 만들어 놓은 디렉토리 삭제
             print("========================실패==========================",product_name)
             os.rmdir(img_folder_path)
         
     def img_req(self,img_url,img_folder_path,retries=0):
-        file_name, _ = os.path.splitext(img_url)
-        # file 이름 jpg 확장자로 통일하기위한 작업
-        file_name = file_name.split('/')[-1].split('=')[-1]+'.jpg'
+        file_name = self.extract_filename(img_url)
         try:
             result = urlretrieve(img_url,os.path.join(img_folder_path,file_name))
             # 3번 더 retry 
@@ -142,7 +142,13 @@ class ScrapForBridgePipeline:
                 self.img_req(img_url,img_folder_path,file_name,retries)
             else:
                 return None
-
+            
+    def extract_filename(self,img_url):
+        file_name, _ = os.path.splitext(img_url)
+        # file 이름 jpg 확장자로 통일하기위한 작업
+        return file_name.split('/')[-1].split('=')[-1]+'.jpg'
+        
+        
     def make_dirs(self,path):
         if not os.path.exists(path):
             os.makedirs(path)
