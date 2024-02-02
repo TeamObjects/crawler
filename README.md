@@ -40,4 +40,6 @@ scrap_for_bridge 경로에서 `scrapy crawl <crawler 이름>`
 'price' : 할인 전 가격
 'tags_obj' : 상품마다의 tag 정보 json 형식
 'img_file_name' : 이미지 저장된 경로 + 처리된 이미지 파일 이름
+'option_info' : 옵션 정보
+'img_url' : img url 정보
 ```

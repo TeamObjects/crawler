@@ -33,6 +33,8 @@ class ProductInfoDetailItem(scrapy.Item):
     ctgr2 = scrapy.Field()
     # depth3
     ctgr3 = scrapy.Field()
+    # option 정보
+    option_info = scrapy.Field()
 
 # 카테고리 정보에 들어갈 data
 class CtgrInfoItem(scrapy.Item):
