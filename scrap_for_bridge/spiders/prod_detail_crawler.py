@@ -50,7 +50,8 @@ class ProdDetailCrawlerSpider(scrapy.Spider):
                 meta = {
                     "detail_api" : f'https://www.coupang.com/vp/products/{product_id}/items/{item_ids[i]}/vendoritems/{v_item_ids[i]}',
                     "metaItem": True,
-                    "category_id": category_id
+                    "category_id": category_id,
+                    "ctgr3_name" : response.xpath('//h3[@class="newcx-product-list-title"]/text()').get().strip()
                 })
         
         #pagenation
@@ -140,7 +141,8 @@ class ProdDetailCrawlerSpider(scrapy.Spider):
                             headers = self.headers,
                             meta = {
                                 "detail_api" : f'https://www.coupang.com/vp/products/{res_obj["productId"]}/items/{option_item["itemId"]}/vendoritems/{option_item["vendorItemId"]}',
-                                "metaItem": False
+                                "metaItem": False,
+                                "ctgr3_name" : response.meta['ctgr3_name']
                             })
         else:
             option_info = ''
@@ -153,7 +155,7 @@ class ProdDetailCrawlerSpider(scrapy.Spider):
                 "price" : price,
                 "dc_rate" : dc_rate,
                 "tags_obj": tags_obj,
-                "ctgr3_name" : res_obj['leafCategoryInfo']['name'],
+                "ctgr3_name" : response.meta['ctgr3_name'],
                 "option_info" : option_info
             },
             callback = self.parse_detail_urls)
